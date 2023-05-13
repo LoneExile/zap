@@ -3,7 +3,7 @@
 main() {
 
     local BACKUP_SUFFIX="$(date +%Y-%m-%d)_$(date +%s)"
-    local ZAP_DIR="$HOME/.local/share/zap"
+    local ZAP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zap"
     local ZSHRC="${ZDOTDIR:-$HOME}/.zshrc"
 
     # check if ZAP_DIR already exists
@@ -19,6 +19,17 @@ main() {
         rm -rf "$ZAP_DIR"
     }
 
+    # Get the branch of the Zap ZSH repository to clone
+    [[ $1 == "--branch" || $1 == "-b" && -n $2 ]] && local BRANCH="$2"
+
+    git clone --depth 1 -b "${BRANCH:-master}" https://github.com/zap-zsh/zap.git "$ZAP_DIR" > /dev/null 2>&1 || { echo "❌ Failed to install Zap" && return 2 }
+
+    # Check the .zshrc template exists
+    if [ ! -f "$ZAP_DIR/templates/default-zshrc" ]; then
+        echo "Template .zshrc file was not found in Zap installation"
+        return 2
+    fi
+
     # Check if the current .zshrc file exists
     if [ -f "$ZSHRC" ]; then
         # Move the current .zshrc file to the new filename
@@ -26,23 +37,11 @@ main() {
         echo "Moved .zshrc to .zshrc_$BACKUP_SUFFIX"
     else
         echo "No .zshrc file found, creating a new one..."
-    fi
-
-    # Check if .zshrc file exists, create it if not
-    if [ ! -f "$ZSHRC" ]; then
         touch "$ZSHRC"
     fi
 
-    echo "# Created by Zap installer" >> "$ZSHRC"
-    echo '[ -f "$HOME/.local/share/zap/zap.zsh" ] && source "$HOME/.local/share/zap/zap.zsh"' >> "$ZSHRC"
-    echo 'plug "zsh-users/zsh-autosuggestions"' >> "$ZSHRC"
-    echo 'plug "zap-zsh/supercharge"' >> "$ZSHRC"
-    echo 'plug "zap-zsh/zap-prompt"' >> "$ZSHRC"
-    echo 'plug "zsh-users/zsh-syntax-highlighting"' >> "$ZSHRC"
-
-    [[ $1 == "--branch" || $1 == "-b" && -n $2 ]] && local BRANCH="$2"
-
-    git clone --depth 1 -b "${BRANCH:-master}" https://github.com/zap-zsh/zap.git "$ZAP_DIR" > /dev/null 2>&1 || { echo "❌ Failed to install Zap" && return 2 }
+    # Write out the .zshrc template to the .zshrc
+    cat "$ZAP_DIR/templates/default-zshrc" >> "$ZSHRC"
 
     echo " Zapped"
     echo "Find more plugins at http://zapzsh.org"

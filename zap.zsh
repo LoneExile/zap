@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 export ZSHRC="${ZDOTDIR:-$HOME}/.zshrc"
-export ZAP_DIR="$HOME/.local/share/zap"
+export ZAP_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/zap"
 export ZAP_PLUGIN_DIR="$ZAP_DIR/plugins"
 export -a ZAP_INSTALLED_PLUGINS=()
 fpath+="$ZAP_DIR/completion"
@@ -37,7 +37,7 @@ function plug() {
     local git_ref="$2"
     if [ ! -d "$plugin_dir" ]; then
         echo "🔌 Zap is installing $plugin_name..."
-        git clone --depth 1 "${ZAP_GITHUB_PREFIX:-"https://"}github.com/${plugin}.git" "$plugin_dir" > /dev/null 2>&1 || { echo -e "\e[1A\e[K❌ Failed to clone $plugin_name"; return 12 }
+        git clone --depth 1 "${ZAP_GIT_PREFIX:-"https://github.com/"}${plugin}.git" "$plugin_dir" > /dev/null 2>&1 || { echo -e "\e[1A\e[K❌ Failed to clone $plugin_name"; return 12 }
         echo -e "\e[1A\e[K⚡ Zap installed $plugin_name"
     fi
     [[ -n "$git_ref" ]] && { git -C "$plugin_dir" checkout "$git_ref" > /dev/null 2>&1 || { echo "❌ Failed to checkout $git_ref"; return 13 }}
@@ -123,15 +123,15 @@ function _zap_help() {
 Usage: zap <command> [options]
 
 COMMANDS:
-    clean                  Remove unused plugins
-    help                   Show this help message
-    list                   List plugins
-    update                 Update plugins
-    version                Show version information
+    clean          Remove unused plugins
+    help           Show this help message
+    list           List plugins
+    update         Update plugins
+    version        Show version information
 
 OPTIONS:
-    update self            Update Zap itself
-    update all             Update all plugins"
+    update self    Update Zap itself
+    update all     Update all plugins"
 }
 
 function _zap_version() {
@@ -162,6 +162,3 @@ function zap() {
 #   13: Failed to checkout
 #   14: Failed to pull
 #   15: Nothing to remove
-
-
-
